@@ -373,49 +373,66 @@ class CustomProfileManagerComponent extends CBitrixComponent implements Controll
             'PRICEMIN' => $this->arParams['USVC_PRICEMIN_PROP_CODE'],
             'PRICEMAX' => $this->arParams['USVC_PRICEMAX_PROP_CODE'],
         ];
+        $errors    = [];
+        $processed = [];
 
-        $errors  = [];
-        $created = [];
+        // существующие услуги пользователя
+        $existing = [];
+        $rs = CIBlockElement::GetList(
+            [],
+            ['IBLOCK_ID' => $iblockId, 'PROPERTY_'.$pc['USER'] => $this->USER_ID],
+            false, false,
+            ['ID','PROPERTY_'.$pc['SERVICE']]
+        );
+        while ($row = $rs->Fetch()) {
+            $existing[(int)$row['PROPERTY_'.$pc['SERVICE'].'_VALUE']] = (int)$row['ID'];
+        }
+
         $el = new CIBlockElement();
 
-        // создаём новые
         foreach ($services as $k => $sid) {
             $sid = (int)$sid;
             if ($sid <= 0) { continue; }
 
-            $fields = [
-                'IBLOCK_ID'         => $iblockId,
-                'IBLOCK_SECTION_ID' => false,
-                'ACTIVE'            => 'Y',
-                'NAME'              => 'User '.$this->USER_ID.' - '.$sid,
-                'DETAIL_TEXT'       => $this->normalize(($desc[$k] ?? ''), 100),
-                'PROPERTY_VALUES'   => [
-                    $pc['SERVICE']  => $sid,
-                    $pc['USER']     => $this->USER_ID,
-                    $pc['DAYSMIN']  => (int)($daymin[$k] ?? 0),
-                    $pc['DAYSMAX']  => (int)($daymax[$k] ?? 0),
-                    $pc['PRICEMIN'] => (int)str_replace(' ', '', (string)($pricemin[$k] ?? 0)),
-                    $pc['PRICEMAX'] => (int)str_replace(' ', '', (string)($pricemax[$k] ?? 0)),
-                ],
+            $pvals = [
+                $pc['SERVICE']  => $sid,
+                $pc['USER']     => $this->USER_ID,
+                $pc['DAYSMIN']  => (int)($daymin[$k] ?? 0),
+                $pc['DAYSMAX']  => (int)($daymax[$k] ?? 0),
+                $pc['PRICEMIN'] => (int)str_replace(' ', '', (string)($pricemin[$k] ?? 0)),
+                $pc['PRICEMAX'] => (int)str_replace(' ', '', (string)($pricemax[$k] ?? 0)),
             ];
+            $dtxt = $this->normalize(($desc[$k] ?? ''), 100);
 
-            $newId = (int)$el->Add($fields);
-            if ($newId > 0) {
-                $created[] = $newId;
+            if (isset($existing[$sid])) {
+                $id = $existing[$sid];
+                $ok = $el->Update($id, ['DETAIL_TEXT' => $dtxt, 'PROPERTY_VALUES' => $pvals]);
+                if ($ok) {
+                    $processed[] = $id;
+                } else {
+                    $errors[] = $el->LAST_ERROR ?: 'Ошибка обновления услуги (SERVICE='.$sid.')';
+                }
             } else {
-                $errors[] = $el->LAST_ERROR ?: 'Ошибка сохранения услуги (SERVICE='.$sid.')';
+                $fields = [
+                    'IBLOCK_ID'         => $iblockId,
+                    'IBLOCK_SECTION_ID' => false,
+                    'ACTIVE'            => 'Y',
+                    'NAME'              => 'User '.$this->USER_ID.' - '.$sid,
+                    'DETAIL_TEXT'       => $dtxt,
+                    'PROPERTY_VALUES'   => $pvals,
+                ];
+                $newId = (int)$el->Add($fields);
+                if ($newId > 0) {
+                    $processed[] = $newId;
+                } else {
+                    $errors[] = $el->LAST_ERROR ?: 'Ошибка сохранения услуги (SERVICE='.$sid.')';
+                }
             }
         }
 
-        // удаляем старые (все, кроме только что созданных)
-        $rs = CIBlockElement::GetList(
-            [],
-            ['IBLOCK_ID' => $iblockId, 'PROPERTY_'.$pc['USER'] => $this->USER_ID],
-            false, false, ['ID']
-        );
-        while ($it = $rs->Fetch()) {
-            $id = (int)$it['ID'];
-            if (!in_array($id, $created, true)) {
+        // удаляем услуги, не переданные в запросе
+        foreach ($existing as $sid => $id) {
+            if (!in_array($id, $processed, true)) {
                 CIBlockElement::Delete($id);
             }
         }
@@ -424,32 +441,45 @@ class CustomProfileManagerComponent extends CBitrixComponent implements Controll
             throw new \Bitrix\Main\SystemException(implode('; ', $errors));
         }
 
-        return ['status' => 'ok', 'created' => count($created)];
+        return ['status' => 'ok', 'created' => count($processed)];
     }
 
     public function deleteProjectAction($projectId)
     {
         $this->initUser();
         $projectId = (int)$projectId;
-        $this->assertProjectOwner($projectId);
+        $el = $this->assertProjectOwner($projectId);
+
+        // удаляем файлы проекта
+        foreach ($this->getGalleryIds($projectId) as $fid) {
+            \CFile::Delete((int)$fid);
+        }
+        if ((int)$el['PREVIEW_PICTURE'] > 0) \CFile::Delete((int)$el['PREVIEW_PICTURE']);
+        if ((int)$el['DETAIL_PICTURE']  > 0) \CFile::Delete((int)$el['DETAIL_PICTURE']);
+
+        // очищаем свойства, чтобы избежать зависимостей
+        CIBlockElement::SetPropertyValuesEx($projectId, $this->arParams['PROJECT_IBLOCK_ID'], [
+            $this->arParams['PROJECT_GALLERY_PROP_CODE']  => [],
+            $this->arParams['PROJECT_SERVICES_PROP_CODE'] => [],
+        ]);
 
         global $APPLICATION;
         $APPLICATION->ResetException();
 
-        $ok = CIBlockElement::Delete($projectId);
-        if ($ok) return ['status' => 'ok'];
+        if (CIBlockElement::Delete($projectId)) {
+            return ['status' => 'ok'];
+        }
 
         // если нельзя удалить — деактивируем
         $ex  = $APPLICATION->GetException();
         $msg = $ex ? $ex->GetString() : '';
 
-        $el = new CIBlockElement();
-        $upd = $el->Update($projectId, ['ACTIVE' => 'N']);
-        if ($upd) {
+        $elUpd = new CIBlockElement();
+        if ($elUpd->Update($projectId, ['ACTIVE' => 'N'])) {
             return ['status' => 'soft', 'message' => ($msg ?: 'Нет прав на удаление, проект деактивирован')];
         }
 
-        $err = $el->LAST_ERROR ?: $msg ?: 'Не удалось удалить проект';
+        $err = $elUpd->LAST_ERROR ?: $msg ?: 'Не удалось удалить проект';
         throw new \Bitrix\Main\SystemException($err);
     }
 
