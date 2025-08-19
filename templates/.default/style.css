@@ -1,0 +1,113 @@
+/* ====== БАЗА ====== */
+.pm-container{max-width:1160px;margin:0 auto;padding:10px 14px 300px;}
+.pm-title{font-size:56px;text-align:center;margin:10px 0 26px;letter-spacing:.02em;}
+
+.pm-section{margin:28px 0 14px;}
+.pm-section__title{font-size:28px;font-weight:600;}
+.pm-section__title--normal{text-transform:none;}
+
+.pm-card{
+  background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.04);
+  padding:18px;margin-bottom:22px;
+}
+.pm-muted{color:#7a7a7a;font-size:13px;margin-top:2px}
+.pm-sep{height:1px;background:#efe9dc;margin:16px 0}
+
+/* ====== КНОПКИ ====== */
+.pm-btn{border:0;border-radius:12px;padding:10px 16px;cursor:pointer}
+.pm-btn--primary{background:#111;color:#fff}
+.pm-btn--danger{background:#E65B54;color:#fff}
+.pm-btn--ghost{background:#f4f2eb;color:#111}
+.pm-btn--sm{padding:8px 12px;font-size:14px;border-radius:10px}
+.pm-actions{display:flex;gap:10px}
+.pm-actions--right{justify-content:flex-end}
+
+/* ====== ФОРМА / СЕТКА ====== */
+.pm-row{display:flex;gap:18px;margin-bottom:14px}
+.pm-row--head{align-items:center;justify-content:space-between;margin-bottom:10px}
+.pm-col{flex:1 1 0;min-width:200px}
+.pm-col--full{flex:1 1 100%}
+
+.pm-label{display:block;margin:0 0 6px;color:#666;font-size:14px}
+.pm-input,.pm-select,.pm-textarea{
+  width:100%;border:1px solid #ece7dc;border-radius:14px;background:#f3efe6;
+  padding:14px 16px;font-size:16px;outline:none
+}
+.pm-textarea{min-height:100px;resize:vertical}
+
+/* ====== ПРОФИЛЬ ====== */
+.pm-profile-grid{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
+.pm-avatar{position:relative;width:220px;height:220px;border-radius:16px;background:#f6f1e6;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.pm-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.pm-file{display:flex;align-items:center;gap:10px}
+.pm-hint{color:#8b8171;font-size:12px}
+
+/* ====== ПРОЕКТЫ ====== */
+.pm-projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.pm-project-card{position:relative;display:block;text-decoration:none;color:#111;border:1px solid #eee6d9;border-radius:14px;overflow:hidden;background:#fff}
+.pm-project-thumb{height:150px;background-size:cover;background-position:center}
+.pm-project-thumb--empty{display:flex;align-items:center;justify-content:center;height:150px;font-size:42px;color:#aaa;background:#f6f1e6}
+.pm-project-title{padding:10px 12px}
+.pm-project-edit{position:absolute;left:10px;top:10px;background:rgba(17,17,17,.78);color:#fff;font-size:12px;padding:6px 8px;border-radius:10px;opacity:0;transition:.2s}
+.pm-project-card:hover .pm-project-edit{opacity:1}
+
+/* ====== ГАЛЕРЕЯ ====== */
+.pm-gallery{display:flex;flex-wrap:wrap;gap:12px}
+.pm-thumb{position:relative;width:220px;height:150px;border-radius:12px;overflow:hidden;background:#f6f1e6}
+.pm-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pm-thumb-del{position:absolute;right:6px;top:6px;border:0;width:24px;height:24px;line-height:24px;border-radius:50%;background:#111;color:#fff;cursor:pointer}
+
+/* ====== УСЛУГИ ====== */
+.pm-service-row{
+  position:relative;display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr;
+  gap:18px;padding:16px;border:1px solid #eee6d9;border-radius:14px;background:#fff;margin-bottom:12px
+}
+.pm-srv-num{font-size:26px;font-weight:600;color:#1d1d1d;display:flex;align-items:center;justify-content:center}
+.pm-row-del{position:absolute;right:10px;top:10px;background:#f1eae0;border:0;width:28px;height:28px;border-radius:50%;cursor:pointer}
+
+/* Слайдеры (двойной) */
+.pm-range .pm-label{margin-bottom:8px}
+.pm-dual{position:relative;height:30px;margin-top:4px}
+.pm-dual .pm-range-input{
+  position:absolute;inset:0;width:100%;background:none;z-index:2; /* кликабельно */
+}
+.pm-dual-track{
+  position:absolute;left:0;right:0;top:12px;height:6px;border-radius:6px;z-index:1;
+  background:linear-gradient(
+    to right,
+    #efe9dc var(--from,0%),
+    #3b5f82 var(--from,0%),
+    #3b5f82 var(--to,0%),
+    #efe9dc var(--to,0%)
+  );
+}
+.pm-range-input{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:transparent;border-radius:6px;outline:none}
+.pm-range-input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;background:#fff;border:1px solid #ddd2bf;border-radius:6px;box-shadow:0 1px 0 rgba(0,0,0,.1);margin-top:-8px}
+.pm-range-input::-moz-range-thumb{width:22px;height:22px;background:#fff;border:1px solid #ddd2bf;border-radius:6px}
+
+.pm-range-values{display:flex;align-items:center;gap:8px;margin-top:8px;color:#6d6d6d}
+.pm-num{width:98px;text-align:center;background:#f3efe6;border:1px solid #ece7dc;border-radius:14px;padding:10px 12px;font-size:15px;outline:none}
+
+/* ====== ТОСТЫ ====== */
+#pm-toast{position:fixed;right:18px;top:18px;display:flex;flex-direction:column;gap:8px;z-index:2147483647}
+.pm-toast{padding:10px 14px;border-radius:10px;color:#fff;opacity:0;transform:translateY(-8px);transition:.2s}
+.pm-toast.show{opacity:1;transform:none}
+.pm-toast--success{background:#2e9f61}.pm-toast--danger{background:#d9534f}.pm-toast--info{background:#444}
+
+/* ====== ВАЖНО: поверх футера/оверлеев ====== */
+.pm-container,
+.pm-section,
+.pm-card,
+.pm-services-card,
+#services{
+  position:relative;z-index:100000
+}
+/* Форма создания проекта всегда выше всего */
+#pm-new-project{display:none;background:#fff;z-index:2147483647}
+
+/* АДАПТИВ */
+@media (max-width: 900px){ .pm-profile-grid{grid-template-columns:1fr} }
+@media (max-width: 520px){
+  .pm-service-row{grid-template-columns:40px 1fr;grid-auto-rows:auto}
+  .pm-srv-num{grid-row:1 / span 2}
+}
