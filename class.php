@@ -432,12 +432,18 @@ class CustomProfileManagerComponent extends CBitrixComponent implements Controll
         $this->initUser();
         $projectId = (int)$projectId;
         $this->assertProjectOwner($projectId);
+        // удаляем файлы из галереи проекта
+        foreach ($this->getGalleryIds($projectId) as $fid) {
+            \CFile::Delete((int)$fid);
+        }
 
         global $APPLICATION;
         $APPLICATION->ResetException();
 
         $ok = CIBlockElement::Delete($projectId);
-        if ($ok) return ['status' => 'ok'];
+        if ($ok) {
+            return ['status' => 'ok'];
+        }
 
         // если нельзя удалить — деактивируем
         $ex  = $APPLICATION->GetException();
